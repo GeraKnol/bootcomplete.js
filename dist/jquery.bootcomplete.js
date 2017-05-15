@@ -13,6 +13,7 @@
         var defaults = {
             url : "/search.php",
             method : 'get',
+            delay : 0,
             wrapperClass : "bc-wrapper",
             menuClass : "bc-menu",
             idField : true,
@@ -37,6 +38,7 @@
         $('<div class="'+settings.menuClass+' list-group"></div>').insertAfter($(this))
         
         $(this).on("keyup", searchQuery);
+        
         $(this).on("focusout", hideThat)
 
         var xhr;
@@ -48,45 +50,47 @@
             }
             $(that).next('.' + settings.menuClass).hide();
         }
-        
+        var delayTimer;
         function searchQuery(){
-            
-            var arr = [];
-            $.each(settings.formParams,function(k,v){
-                arr[k]=$(v).val()
-            })
-            var dyFormParams = $.extend({}, arr );
-            var Data = $.extend({query: $(this).val()}, settings.dataParams, dyFormParams);
-            
-            if(!Data.query){
-                $(this).next('.'+settings.menuClass).html('')    
-                $(this).next('.'+settings.menuClass).hide()    
-            }
-            
-            if(Data.query.length >= settings.minLength){
-                
-                if(xhr && xhr.readyState != 4){
-                    xhr.abort();
-                }
-                
-                xhr = $.ajax({
-                    type: settings.method,
-                    url: settings.url,
-                    data: Data,
-                    dataType: "json",
-                    success: function( json ) {
-                        var results = ''
-                        $.each( json, function(i, j) {
-                            results += '<a href="#" class="list-group-item" data-id="'+j.id+'" data-label="'+j.label+'">'+j.label+'</a>'
-                        });
-                        
-                        $(that).next('.'+settings.menuClass).html(results)
-                        $(that).next('.'+settings.menuClass).children().on("click", selectResult)
-                        $(that).next('.'+settings.menuClass).show()
-                   
-                    }
-                })
-            }
+        	var field = $(this);
+        	clearTimeout(delayTimer);
+            delayTimer = setTimeout(function() {
+            	var arr = [];
+	            $.each(settings.formParams,function(k,v){
+	                arr[k]=$(v).val()
+	            })
+	            var dyFormParams = $.extend({}, arr );
+	            var Data = $.extend({query: $(field).val()}, settings.dataParams, dyFormParams);
+	            
+	            if(!Data.query){
+	                $(field).next('.'+settings.menuClass).html('')    
+	                $(field).next('.'+settings.menuClass).hide()    
+	            }
+	            
+	            if(Data.query.length >= settings.minLength){
+	            	if(xhr && xhr.readyState != 4){
+	                    xhr.abort();
+	                }
+	                
+	                xhr = $.ajax({
+	                    type: settings.method,
+	                    url: settings.url,
+	                    data: Data,
+	                    dataType: "json",
+	                    success: function( json ) {
+	                        var results = ''
+	                        $.each( json, function(i, j) {
+	                            results += '<a href="#" class="list-group-item" data-id="'+j.id+'" data-label="'+j.label+'">'+j.label+'</a>'
+	                        });
+	                        
+	                        $(that).next('.'+settings.menuClass).html(results)
+	                        $(that).next('.'+settings.menuClass).children().on("click", selectResult)
+	                        $(that).next('.'+settings.menuClass).show()
+	                   
+	                    }
+	                })
+	            }
+            }, settings.delay);
         }
         
         function selectResult(){
